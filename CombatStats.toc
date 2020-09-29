@@ -5,3 +5,4 @@
 ## Interface: 11305
 
 CombatStats.lua
+helper.lua

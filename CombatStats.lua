@@ -1,20 +1,11 @@
 --[[ Code To Calculate Combat Stats ]]
 
--- TODO Add helpers to a module
---[[ Helpers ]]
--- x = value to round
--- n = decimal places
-local function round(x, n)
-	n = math.pow(10, n or 0)
-	x = x * n
-	if x >= 0 then x = math.floor(x + 0.5) else x = math.ceil(x - 0.5) end
-	return x / n
-end
+-- Get helper functions
+local helper, h = ...
 
--- TODO add Crit Chance
 --[[ Melee ]]
-
 -- Access variables for melee data
+local CRIT_CHANCE       = 'Critical Strike Chance:  '
 local LOW_DAMAGE        = 'Main Hand Low Damage:  '
 local HI_DAMAGE         = 'Main Hand High Damage:  '
 local OFF_LOW_DAMAGE    = 'Off Hand Low Damage:  '
@@ -29,7 +20,7 @@ local OFF_DPS           = 'Low Hand DPS:  '
 local TOTAL             = 'Total DPS:  '
 
 -- this will have to do until I can figure out how to sort better
-local melee_order = {LOW_DAMAGE,HI_DAMAGE,OFF_LOW_DAMAGE,OFF_HI_DAMAGE,MAIN_ATTACK_SPEED,OFF_ATTACK_SPEED,DPS,OFF_DPS,TOTAL}
+local melee_order = {CRIT_CHANCE, LOW_DAMAGE,HI_DAMAGE,OFF_LOW_DAMAGE,OFF_HI_DAMAGE,MAIN_ATTACK_SPEED,OFF_ATTACK_SPEED,DPS,OFF_DPS,TOTAL}
 
 local function printMelee(meleeData)
 	print('|cff00ccffMelee Combat Stats:|r\n')
@@ -40,7 +31,7 @@ local function printMelee(meleeData)
 		
 		-- get and print the data value
 		v = meleeData[v]
-		v = round(v, 2) -- round to the nearst 2 digit	
+		v = h.f.round(v, 2) -- round to the nearst 2 digit	
 		-- add some color coding
 		--[[if k == POS_BUFF then
 			v = '|cff00ff00'..v..'|r'
@@ -48,6 +39,15 @@ local function printMelee(meleeData)
 		if k == NEG_BUFF then
 			v = '|cffff0000'..v..'|r'
 		end ]]
+    if k == MAIN_ATTACK_SPEED then
+      v = v..' s'
+    end
+    if k == OFF_ATTACK_SPEED then
+      v = v..' s'
+    end
+    if k == CRIT_CHANCE then
+      v = v..'%'
+    end
 		if k == TOTAL then -- color code the total
 			v = '|cffADFF2F'..v..'|r'
 		end
@@ -59,6 +59,7 @@ local function melee()
 	-- get the melee data needed to be useful
 	local lowDmg, hiDmg, offlowDmg, offhiDmg, posBuff, negBuff, percentmod = UnitDamage("player")
 	local mainAtSp, offAtSp = UnitAttackSpeed("player")
+  local crit = GetCritChance()
 	
 	-- handle no off hand weapon
 	if offlowDmg == nil then offlowDmg = 0 end
@@ -67,6 +68,7 @@ local function melee()
 
 	-- melee data table
 	local meleeData = {}
+  meleeData[CRIT_CHANCE]        = crit
 	meleeData[LOW_DAMAGE]         = lowDmg
 	meleeData[HI_DAMAGE]          = hiDmg
 	meleeData[OFF_LOW_DAMAGE]     = offlowDmg
@@ -85,7 +87,7 @@ local function melee()
 	end
 	
 	-- add dps to the data
-	local totaldps = maindps + offdps
+	local totaldps     = maindps + offdps
 	meleeData[TOTAL]   = totaldps
 	meleeData[DPS]     = maindps
 	meleeData[OFF_DPS] = offdps
@@ -94,6 +96,10 @@ local function melee()
 	printMelee(meleeData)
 end
 
+--[[ !!**TODO**!! Add to the bottom of the panel/tool tip or whatever they 
+--  fucking call it when the mouse hovers over the melee stats -- over all
+    objective!
+-- Add to the slash command for the consle ]]
 local function combatStats(msg, editbox)
 	if msg == '-m' or msg == 'melee' then
 		melee()
